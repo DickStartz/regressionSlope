@@ -12,6 +12,22 @@ let rotateButton;
 let clearButton;
 let animationInProgress = false;
 let originalLineData = []; // Store the original line data for rotation
+let curveDatasets = []; // Store the curve datasets for clearing
+let colorIndex = 0; // Index to track which color to use next
+
+// Array of colors for the curves
+const curveColors = [
+    '#FF5733', // Red-Orange
+    '#33FF57', // Green
+    '#3357FF', // Blue
+    '#F033FF', // Purple
+    '#FF33F0', // Pink
+    '#33FFF0', // Cyan
+    '#F0FF33', // Yellow
+    '#FF8C33', // Orange
+    '#8C33FF', // Violet
+    '#33FFAA'  // Mint
+];
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', () => {
@@ -217,6 +233,75 @@ function rotateRegressionLine() {
     // Allow the lower bound to go negative if needed
     const lowerBound = originalSlope - 2 * se;
     
+    // Select the next color for the curves
+    const currentColor = curveColors[colorIndex % curveColors.length];
+    colorIndex++; // Increment for next time
+    
+    // Create curves with equations x*(1+2*se) and x*(1-2*se)
+    createBoundCurves(upperBound, lowerBound, currentColor);
+    
+    // Start the rotation animation
+    startRotationAnimation(midX, midY, se, originalSlope, upperBound, lowerBound);
+}
+
+// Function to create curves with equations x*(1+2*se) and x*(1-2*se)
+function createBoundCurves(upperBound, lowerBound, color) {
+    // Generate points for the upper bound curve: y = x * upperBound
+    const upperCurveData = [];
+    // Generate points for the lower bound curve: y = x * lowerBound
+    const lowerCurveData = [];
+    
+    // Generate points across the x-axis range
+    for (let x = -5; x <= 5; x += 0.1) {
+        // Calculate y values for each curve
+        const upperY = x * upperBound;
+        const lowerY = x * lowerBound;
+        
+        // Add points to the curves
+        upperCurveData.push({ x: x, y: upperY });
+        lowerCurveData.push({ x: x, y: lowerY });
+    }
+    
+    // Add the upper bound curve to the chart
+    const upperCurveIndex = regressionChart.data.datasets.length;
+    regressionChart.data.datasets.push({
+        type: 'line',
+        label: 'Upper Bound Curve',
+        data: upperCurveData,
+        borderColor: color,
+        backgroundColor: 'rgba(0, 0, 0, 0)',
+        borderWidth: 2,
+        borderDash: [5, 5], // Make it dashed
+        pointRadius: 0,
+        tension: 0,
+        fill: false
+    });
+    
+    // Add the lower bound curve to the chart
+    const lowerCurveIndex = regressionChart.data.datasets.length;
+    regressionChart.data.datasets.push({
+        type: 'line',
+        label: 'Lower Bound Curve',
+        data: lowerCurveData,
+        borderColor: color,
+        backgroundColor: 'rgba(0, 0, 0, 0)',
+        borderWidth: 2,
+        borderDash: [5, 5], // Make it dashed
+        pointRadius: 0,
+        tension: 0,
+        fill: false
+    });
+    
+    // Store the indices of the curves for clearing later
+    curveDatasets.push(upperCurveIndex, lowerCurveIndex);
+    
+    // Update the chart
+    regressionChart.update();
+}
+
+// Function to start the rotation animation
+function startRotationAnimation(midX, midY, se, originalSlope, upperBound, lowerBound) {
+    console.log('Starting rotation animation');
     // Animation control variables
     let currentSlope = originalSlope;
     let animationPhase = 1; // 1: going up, 2: going down, 3: going back to original
@@ -319,6 +404,14 @@ function clearVisualization() {
     numObservationsValidation.textContent = '';
     varianceXValidation.textContent = '';
     varianceErrorValidation.textContent = '';
+    
+    // Remove all curves
+    if (curveDatasets.length > 0) {
+        // Remove all datasets except the first one (the regression line)
+        regressionChart.data.datasets = [regressionChart.data.datasets[0]];
+        curveDatasets = [];
+        regressionChart.update();
+    }
     
     // Update the regression line
     updateRegressionLine();
