@@ -66,7 +66,7 @@ function createRegressionChart() {
                 x: {
                     type: 'linear',
                     position: 'bottom',
-                    min: 0,
+                    min: -5,
                     max: 5,
                     title: {
                         display: true,
@@ -77,8 +77,8 @@ function createRegressionChart() {
                     }
                 },
                 y: {
-                    min: -2,
-                    max: 7,
+                    min: -5,
+                    max: 5,
                     title: {
                         display: true,
                         text: 'Y'
@@ -171,9 +171,9 @@ function updateRegressionLine() {
     currentSlopeElement.textContent = "1.00";
     
     // Calculate points for the line with slope 1
-    const x1 = 3 - v;
+    const x1 = -v;
     const y1 = x1; // Since slope is 1 and we want the line to pass through (x1, x1)
-    const x2 = 3 + v;
+    const x2 = v;
     const y2 = x2; // Since slope is 1 and we want the line to pass through (x2, x2)
     
     // Update the regression line data
